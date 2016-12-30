@@ -1,0 +1,143 @@
+---
+title: "slope graphs"
+author: "Atmajit"
+date: "12/30/2016"
+output: 
+  html_document: 
+    toc: yes
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Introduction:
+This post is once again inspired by the week 52 challenge of [Makeover Monday](http://www.makeovermonday.co.uk/data/). We will use the data provided to generate a slopegraph in R. Slopegraph have been widely applied as medium of visualization. Slope charts are primarily used to compare two or more categories of data between different time periods.Schwabish [1] recommends using slope charts as an alternative to using multiple pie charts for comparing two different time frames as shown in the figure below:
+
+```{r}
+par(mfrow=c(1,2))
+p1962= c(16,30,28,15,3,6)
+lbl1962=c("a","b","c","d","e","f")
+pie(p1962, labels=lbl1962, main ="share in 1962")
+p2007=c(36,29,16,9,8,3)
+lbl2007=c("a","b","c","d","e","f")
+pie(p1962, labels=lbl2007, main = "share in 2007")
+```
+
+Andy Kirk [4]*"The typical application for using a slopegraph is for a before and after story. Its key value is that it provides several lines of interrogation in one single chart, revealing ranking, magnitude and changes over time."*
+
+Following are some of the applications of Slope charts - 
+
+* New York Times [3] have employed Slopegraphs to show percentage of each country that is foreign born migrant. 
+* New York Times [4] have employed Slopegraphs to show change in Infant Mortality Rate between 1960 and 2004. The slope of the line is a good indicator of how a country performed over 44 years.
+
+## Data:
+
+The data for the slopegraph is provided by the [Mondaymakeover](http://www.makeovermonday.co.uk/data/) in XLS format. The data can be downloaded from the website by going to the data section and week 52. The data file comprises of prices for 20 grocerry items for a time period 2006 until 2016. We will use data for 2006 and 2016 to show the magnitude of price change for various groceries. 
+
+##Plot:
+The code used to generate the plot is very easy to understand. We will discuss the same under the section generating the slope chart in R.
+
+```{r echo=FALSE, message=FALSE}
+library(plotrix)
+library(dplyr)
+infl = read.csv("christmas_dinner_prices.csv")[-21,]
+infl.plt=cbind(infl[,2], infl[,12])
+infl= mutate(infl, growth=((infl[,12]-infl[,2])/infl[,2])*100)
+rownames(infl.plt)=infl[,1]
+colnames(infl.plt)=c("Rank in 2006","Rank in 2016")
+bumpchart(infl.plt, mar =c(2,8,5,12), col=ifelse(infl$growth>0,"#8c510a","#01665e"), main ="Cost of a Christmas Dinner")
+```
+
+We have used two different colors to show the positive and negative growth in prices between 2006 and 2016. Note that the grocery items are listed under 2006 and 2016 based on their ranking in each year. A quick look at the chart reveals that the most expensive items in 2006 and 2016 were hams, whiskey, crackers and turkey. We also observe that prices for ham and crackers fell from 2006 to 2016 and that of whiskey and turkey rose.
+
+Also, the rank of beer fell from 2006 to 2016. The color indicates that the price of beers fell which is the primary reason the beers were ranked 10 in 2016 whcih  was 5 in 2006.
+
+## Generating a Slope Chart in R:
+### Getting Ready:
+We will install and use the *plotrix* library in R to generate the slopegraph. Further, We will install and use the *dplyr* library for a little bit to data manipulation. 
+
+```{r eval = FALSE}
+library(dplyr)
+library(plotrix)
+```
+
+### Importing data and calculating a growth field:
+We will import the data in R using the *read.csv()* function and add a new column growth using the *mutate()* from dplyr library. Finally, we create a new data set using the columns 2006 and 2016.
+
+```{r eval = FALSE}
+infl = read.csv("christmas_dinner_prices.csv")[-21,]
+infl= mutate(infl, growth=((infl[,12]-infl[,2])/infl[,2])*100)
+infl.plt=cbind(infl[,2], infl[,12])
+```
+
+### Generating the Slope Graph:
+
+The slope chart in R can be craeted quickly using the *bumpchart()* function from the plotrix library. To learn more about additional arguments used in the bumpchart type *?bumpchart* in the R consol window.
+```{r}
+rownames(infl.plt)=infl[,1]
+colnames(infl.plt)=c("Rank in 2006","Rank in 2016")
+bumpchart(infl.plt, mar =c(2,8,5,12), col=ifelse(infl$growth>0,"#8c510a","#01665e"), main ="Cost of a Christmas Dinner")
+```
+
+#### Custom Function to fix the label size:
+The default slope chart generated in R does not allow us to alter the label sizes. We can fix this issue by writting our own function. We will simply use the code from *bumpchart()* function and simply edit the *text()* within bumchart function by adding an argument cex=0.5.
+
+In order to view the code that generates the default slope chart simply type *bumpchart* in the R console window. Copy this code into a new R script window and edit the text() functions. Save and source this newly created function. Regenerate the slope chart again using this new function. The function that allows us to fix the label sizes is provided under  the section Custom Function Code.
+
+The following code can be used to generate the same slope chart but now with smaller labels.
+
+```{r eval= FALSE}
+bmp(infl.plt, mar =c(2,8,5,12),cex=.5,col=ifelse(infl$growth>0,"#8c510a","#01665e"),main ="Cost of a Christmas Dinner")
+```
+
+I generated the slope chart and added the legends using inkscape.
+
+## References:
+
+1. Schwabish (2014): ["An Economist's Guide to Visualizing Data"](http://pubs.aeaweb.org/doi/pdfplus/10.1257/jep.28.1.209) 
+2. New York Times: ["Born Somewhere Else"](http://www.nytimes.com/interactive/2010/06/27/weekinreview/27deparle-graphic.html?_r=0)
+3. New York Times ["Infant Mortality Rate"](http://www.nytimes.com/imagepages/2009/04/06/health/infant_stats.html)
+4. Andy Kirk: [In Praise of Slopegraphs](http://www.visualisingdata.com/2013/12/in-praise-of-slopegraphs/)
+
+
+## Custom Function Code: {#code}
+```{r}
+bmp= function (y, top.labels = colnames(y), labels = rownames(y), 
+          rank = TRUE, mar = c(2, 8, 5, 8), pch = 19, col = par("fg"), 
+          lty = 1, lwd = 1, arrows = FALSE, ...) 
+{
+  if (missing(y)) 
+    stop("Usage: bumpchart(y,top.labels,labels,...)")
+  ydim <- dim(y)
+  if (is.null(ydim)) 
+    stop("y must be a matrix or data frame")
+  oldmar <- par("mar")
+  par(mar = mar)
+  if (rank) 
+    y <- apply(y, 2, rank)
+  labels <- rev(labels)
+  pch = rev(pch)
+  col = rev(col)
+  lty = rev(lty)
+  lwd = rev(lwd)
+  y <- apply(y, 2, rev)
+  if (arrows) {
+    matplot(t(y), ylab = "", type = "p", pch = pch, col = col, 
+            axes = FALSE)
+    for (row in 1:(ydim[2] - 1)) p2p_arrows(rep(row, ydim[1]), 
+                                            y[, row], rep(row + 1, ydim[1]), y[, row + 1], col = col, 
+                                            lty = lty, lwd = lwd, ...)
+  }
+  else matplot(t(y), ylab = "", type = "b", pch = pch, col = col, 
+               lty = lty, lwd = lwd, axes = FALSE, ...)
+  par(xpd = TRUE)
+  xylim <- par("usr")
+  minspacing <- strheight("M") * 1.5
+  text(1:ydim[2], xylim[4], top.labels)
+  labelpos <- spreadout(y[, 1], minspacing)
+  text(xylim[1], labelpos, labels, adj = 1,cex=0.5) # added cex for labels
+  labelpos <- spreadout(y[, ydim[2]], minspacing)
+  text(xylim[2], labelpos, labels, adj = 0,cex=0.5) # added cex for labels
+  par(mar = oldmar, xpd = FALSE)
+}
